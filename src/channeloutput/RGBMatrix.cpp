@@ -52,7 +52,8 @@ RGBMatrixOutput::RGBMatrixOutput(unsigned int startChannel,
 	m_rows(0),
 	m_outputs(0),
 	m_longestChain(0),
-	m_invertedData(0)
+	m_invertedData(0),
+	m_gpioSlowdown(1)
 {
 	LogDebug(VB_CHANNELOUT, "RGBMatrixOutput::RGBMatrixOutput(%u, %u)\n",
 		startChannel, channelCount);
@@ -76,7 +77,12 @@ int RGBMatrixOutput::Init(Json::Value config)
 {
 	LogDebug(VB_CHANNELOUT, "RGBMatrixOutput::Init(JSON)\n");
 
-	m_panelWidth  = config["panelWidth"].asInt();
+	m_gpioSlowdown = getSettingInt("slowdownGPIO");
+
+	if (!m_gpioSlowdown)
+		m_gpioSlowdown = 1;
+
+	m_panelWidth = config["panelWidth"].asInt();
 	m_panelHeight = config["panelHeight"].asInt();
 
 	if (!m_panelWidth)
@@ -85,8 +91,11 @@ int RGBMatrixOutput::Init(Json::Value config)
 	if (!m_panelHeight)
 		m_panelHeight = 16;
 
+	m_options.rows = m_panelHeight;
+
 	m_invertedData = config["invertedData"].asInt();
 	m_colorOrder = config["colorOrder"].asString();
+	m_options.led_rgb_sequence = m_colorOrder.c_str();
 
 	m_panelMatrix =
 		new PanelMatrix(m_panelWidth, m_panelHeight, 3, m_invertedData);
@@ -122,7 +131,35 @@ int RGBMatrixOutput::Init(Json::Value config)
 	m_outputs++;
 	m_longestChain++;
 
+	m_options.chain_length = m_longestChain;
+	m_options.parallel = m_outputs;
+
 	m_panels = m_panelMatrix->PanelCount();
+
+	if (config.isMember("brightness"))
+		m_options.brightness = config["brightness"].asInt();
+	else
+		m_options.brightness = 100;
+
+	m_options.pwm_bits = getSettingInt("pwmBits");
+
+	if (!m_options.pwm_bits)
+		m_options.pwm_bits = 8;
+
+	if (config.isMember("wiringPinout"))
+		m_options.hardware_mapping = config["wiringPinout"].asString().c_str();
+	else
+		m_options.hardware_mapping = "regular";
+
+	m_options.pwm_lsb_nanoseconds = getSettingInt("pwmLSB");
+
+	if (!m_options.pwm_lsb_nanoseconds)
+		m_options.pwm_lsb_nanoseconds = 130;
+
+	m_options.scan_mode = getSettingInt("scanMode");
+
+	if (!m_options.scan_mode)
+		m_options.scan_mode = 0;
 
 	m_gpio = new GPIO();
 	if (!m_gpio)
@@ -132,7 +169,7 @@ int RGBMatrixOutput::Init(Json::Value config)
 		return 0;
 	}
 
-	if (!m_gpio->Init())
+	if (!m_gpio->Init(m_gpioSlowdown))
 	{
 		LogErr(VB_CHANNELOUT, "GPIO->Init() failed\n");
 
@@ -147,7 +184,7 @@ int RGBMatrixOutput::Init(Json::Value config)
 
 	m_channelCount = m_width * m_height * 3;
 
-	m_canvas = new RGBMatrix(m_gpio, m_rows, m_longestChain, m_outputs);
+	m_canvas = new RGBMatrix(m_gpio, m_options);
 	if (!m_canvas)
 	{
 		LogErr(VB_CHANNELOUT, "Unable to create Canvas instance\n");
@@ -159,12 +196,7 @@ int RGBMatrixOutput::Init(Json::Value config)
 	}
 
 	RGBMatrix *rgbmatrix = reinterpret_cast<RGBMatrix*>(m_canvas);
-	rgbmatrix->SetPWMBits(8);
-
-	if (config.isMember("brightness"))
-		rgbmatrix->SetBrightness(config["brightness"].asInt());
-	else
-		rgbmatrix->SetBrightness(100);
+	//rgbmatrix->SetPWMBits(8);
 
 	m_matrix = new Matrix(m_startChannel, m_width, m_height);
 
@@ -239,49 +271,9 @@ int RGBMatrixOutput::RawSendData(unsigned char *channelData)
 				int px = chain * m_panelWidth;
 				for (int x = 0; x < m_panelWidth; x++)
 				{
-					// FIXME, optimize this since it is called once per pixel
-					if (m_colorOrder == "RGB")
-					{
-						r = channelData + m_panelMatrix->m_panels[panel].pixelMap[(y * m_panelWidth + x) * 3];
-						g = r + 1;
-						b = r + 2;
-					}
-					else if (m_colorOrder == "RBG")
-					{
-						r = channelData + m_panelMatrix->m_panels[panel].pixelMap[(y * m_panelWidth + x) * 3];
-						b = r + 1;
-						g = r + 2;
-					}
-					else if (m_colorOrder == "GRB")
-					{
-						g = channelData + m_panelMatrix->m_panels[panel].pixelMap[(y * m_panelWidth + x) * 3];
-						r = g + 1;
-						b = g + 2;
-					}
-					else if (m_colorOrder == "GBR")
-					{
-						g = channelData + m_panelMatrix->m_panels[panel].pixelMap[(y * m_panelWidth + x) * 3];
-						b = g + 1;
-						r = g + 2;
-					}
-					else if (m_colorOrder == "BRG")
-					{
-						b = channelData + m_panelMatrix->m_panels[panel].pixelMap[(y * m_panelWidth + x) * 3];
-						r = b + 1;
-						g = b + 2;
-					}
-					else if (m_colorOrder == "BGR")
-					{
-						b = channelData + m_panelMatrix->m_panels[panel].pixelMap[(y * m_panelWidth + x) * 3];
-						g = b + 1;
-						r = b + 2;
-					}
-					else
-					{
-						r = channelData + m_panelMatrix->m_panels[panel].pixelMap[(y * m_panelWidth + x) * 3];
-						g = r + 1;
-						b = r + 2;
-					}
+					r = channelData + m_panelMatrix->m_panels[panel].pixelMap[(y * m_panelWidth + x) * 3];
+					g = r + 1;
+					b = r + 2;
 
 					m_canvas->SetPixel(px, y + (output * m_panelHeight), *r, *g, *b);
 

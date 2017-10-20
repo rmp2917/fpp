@@ -2684,9 +2684,10 @@ tr.rowUniverseDetails td
 								<td>&nbsp;</td>
 								<td><b>Wiring Pinout:</b></td><td>
 									<select id='LEDPanelsWiringPinout'>
-										<option value='Standard'>Standard</option>
-										<option value='Classic'>Classic</option>
-										<option value='Adafruit'>Adafruit</option>
+										<option value='regular'>Standard</option>
+										<option value='classic'>Classic</option>
+										<option value='adafruit-hat'>Adafruit</option>
+										<option value='adafruit-hat-pwm'>Adafruit PWM</option>
 									</select>
 									</td>
 <?
@@ -2694,9 +2695,25 @@ tr.rowUniverseDetails td
 ?>
 							</tr>
 							<tr>
+<?
+	if ($settings['Platform'] == "Raspberry Pi")
+	{
+?>
+								<td width = '70 px' colspan=2><input id='btnSaveChannelOutputsJSON' class='buttons' type='button' value='Save' onClick='SaveChannelOutputsJSON();'/></td>
+								<td>&nbsp;</td>
+								<td colspan=3><a href="rgbmatrixsettings.php">Advanced Settings</a></td>
+<?
+	}
+	else
+	{
+?>
 								<td width = '70 px' colspan=5><input id='btnSaveChannelOutputsJSON' class='buttons' type='button' value='Save' onClick='SaveChannelOutputsJSON();'/> <font size=-1><? if ($settings['Platform'] == "BeagleBone Black") { echo "(this will save changes to BBB tab &amp; LED Panels tab)"; } ?></font></td>
+<?
+	}
+?>
 							</tr>
 						</table>
+
 						<br>
 						LED Panel Layout:<br>
 						<table id='LEDPanelTable' border=1>

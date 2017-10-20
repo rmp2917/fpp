@@ -71,6 +71,9 @@ class RGBMatrixOutput : public ChannelOutputBase {
 
 	Matrix      *m_matrix;
 	PanelMatrix *m_panelMatrix;
+
+	int			 m_gpioSlowdown;
+	RGBMatrix::Options m_options;
 };
 
 #endif /* _RGBMATRIX_H */
