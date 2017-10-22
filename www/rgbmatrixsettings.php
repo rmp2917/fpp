@@ -54,7 +54,7 @@
 				bits use slightly less CPU and result in a higher refresh rate. (Default: 8)</td>
 		</tr>
         <tr><td colspan='2'><hr></td></tr>
-		<tr><td valign='top'><? PrintSettingSelect("Scan Mode", "ScanMode", 1, 0, "0", Array('0' => '0', '1' => '1')); ?></td>
+		<tr><td valign='top'><? PrintSettingSelect("Scan Mode", "scanMode", 1, 0, "0", Array('0' => '0', '1' => '1')); ?></td>
 			<td valign='top'><b>Scan Mode</b> - This switches between progressive scan
 				and interlaced scan. Interlaced might look a little nicer when you have
 				a very low refresh rate. 0 = progressive; 1 = interlaced (Default: 0)</td>
