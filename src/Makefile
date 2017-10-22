@@ -301,7 +301,7 @@ fppversion.c: fppversion.sh force
 clean:
 	rm -f fppversion.c $(OBJECTS_fpp) $(OBJECTS_fppmm) $(OBJECTS_fppd) fpp fppmm fppd
 	@if [ -e ../external/RF24/.git ]; then make -C ../external/RF24 clean; fi
-	@if [ -e ../external/rpi-rgb-led-matrix/.git ]; then make -C ../external/rpi-rgb-led-matrix clean; fi
+	@if [ -e ../external/rpi-rgb-led-matrix/.git ]; then make -C ../external/rpi-rgb-led-matrix/lib clean; fi
 	@if [ -e ../external/rpi_ws281x/libws2811.a ]; then rm ../external/rpi_ws281x/*.o ../external/rpi_ws281x/*.a 2> /dev/null; fi
 	@if [ -e ../external/LEDscape/.git ]; then make -C ../external/LEDscape clean; fi
 	for dir in $(SUBDIRS); do \
@@ -337,7 +337,7 @@ util: force
 
 ../external/rpi-rgb-led-matrix/lib/librgbmatrix.so.1: ../external/rpi-rgb-led-matrix/.git
 	@echo "Building rpi-rgb-led-matrix library"
-	@make -C ../external/rpi-rgb-led-matrix/
+	@make -C ../external/rpi-rgb-led-matrix/lib
 	strip ../external/rpi-rgb-led-matrix/lib/librgbmatrix.so.1
 
 #############################################################################
