@@ -26,10 +26,10 @@ $command_array = Array(
 	"setDNSInfo"          => 'SetDNSInfo',
 	"getFPPDUptime"       => 'GetFPPDUptime',
 	"applyInterfaceInfo"  => 'ApplyInterfaceInfo',
-	"getInterfaceInfo"    => 'GetInterfaceInfo',
+	"getInterfaceInfo"    => 'GetInterfaceInfoJson',
 	"setInterfaceInfo"    => 'SetInterfaceInfo',
 	"getFPPSystems"       => 'GetFPPSystems',
-	"getFPPstatus"		  => 'GetFPPStatus',
+	"getFPPstatus"		  => 'GetFPPStatusJson',
 	"getSetting"          => 'GetSetting',
 	"setSetting"          => 'SetSetting',
 	"startSequence"       => 'StartSequence',
@@ -42,8 +42,8 @@ $command_array = Array(
 	"saveScript"          => 'SaveScript',
 	"setTestMode"         => 'SetTestMode',
 	"getTestMode"         => 'GetTestMode',
-	"setupExtGPIO"        => 'SetupExtGPIO',
-	"extGPIO"             => 'ExtGPIO'
+	"setupExtGPIO"        => 'SetupExtGPIOJson',
+	"extGPIO"             => 'ExtGPIOJson'
 );
 
 $command = "";
@@ -190,7 +190,7 @@ function GetFPPDUptime()
 	returnJSON($result);
 }
 
-function GetFPPStatus()
+function GetFPPStatusJson()
 {
 	global $args;
 
@@ -429,7 +429,7 @@ function GetFPPSystems()
 {
 	exec("ip addr show up | grep 'inet ' | awk '{print $2}' | cut -f1 -d/ | grep -v '^127'", $localIPs);
 
-	exec("avahi-browse -artp | sort", $rmtSysOut);
+	exec("avahi-browse -artp | grep -v 'IPv6' | sort", $rmtSysOut);
 
 	$result = Array();
 
@@ -467,7 +467,7 @@ function GetFPPSystems()
 			}
 	 }
 
-		if (!(($elem['IP'] == "192.168.7.2") && ($elem['Platform'] == "BeagleBone Black")))
+		if (!((($elem['IP'] == "192.168.7.2") || ($elem['IP'] == "192.168.6.2")) && ($elem['Platform'] == "BeagleBone Black")))
 		{
 			$result[] = $elem;
 		}
@@ -738,7 +738,7 @@ function ApplyInterfaceInfo()
 }
 
 
-function GetInterfaceInfo()
+function GetInterfaceInfoJson()
 {
 	global $settings;
 	global $args;
@@ -933,7 +933,7 @@ function GetTestMode()
 
 /////////////////////////////////////////////////////////////////////////////
 
-function SetupExtGPIO()
+function SetupExtGPIOJson()
 {
 	global $args;
 	$result = Array();
@@ -958,7 +958,7 @@ function SetupExtGPIO()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-function ExtGPIO()
+function ExtGPIOJson()
 {
 	global $args;
 	$result = Array();

@@ -26,3 +26,18 @@
 		});
 	});
 	</script>
+
+<?
+	if (isset($settings['backgroundColor']) && $settings['backgroundColor'] != "")
+	{
+?>
+		<style>
+			#bodyWrapper {
+				border: 50px;
+				border-style: solid;
+				border-color: #<? echo $settings['backgroundColor'] ?>;
+			}
+		</style>
+<?
+	}
+?>
